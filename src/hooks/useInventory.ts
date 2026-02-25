@@ -7,7 +7,12 @@ const STORAGE_KEY = 'reppi_inventory';
 function loadFromStorage(): Product[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Product[];
+    if (raw) {
+      const stored = JSON.parse(raw) as Product[];
+      const storedIds = new Set(stored.map((p) => p.id));
+      const missing = INITIAL_PRODUCTS.filter((p) => !storedIds.has(p.id));
+      return missing.length > 0 ? [...stored, ...missing] : stored;
+    }
   } catch {
     // ignore
   }
