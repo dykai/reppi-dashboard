@@ -198,8 +198,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     endDate: '2026-03-31',
     price: 9.99,
     vat: 20,
-    quantity: 100,
-    lowStockThreshold: 10,
   },
   {
     id: 'comp-002',
@@ -211,8 +209,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     endDate: '2026-06-30',
     price: 19.99,
     vat: 20,
-    quantity: 50,
-    lowStockThreshold: 5,
   },
   {
     id: 'comp-003',
@@ -224,8 +220,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     endDate: '2026-05-15',
     price: 14.99,
     vat: 20,
-    quantity: 200,
-    lowStockThreshold: 20,
   },
   // Live Competition
   {
@@ -238,8 +232,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     endDate: '2026-09-05',
     price: 49.99,
     vat: 10,
-    quantity: 500,
-    lowStockThreshold: 50,
   },
   {
     id: 'comp-005',
@@ -251,7 +243,5 @@ export const INITIAL_PRODUCTS: Product[] = [
     endDate: '2026-07-22',
     price: 29.99,
     vat: 10,
-    quantity: 80,
-    lowStockThreshold: 10,
   },
 ];

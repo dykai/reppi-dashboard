@@ -16,12 +16,16 @@ export interface Product {
   sku: string;
   category: Category;
   price: number;
-  quantity: number;
-  lowStockThreshold: number;
+  quantity?: number;
+  lowStockThreshold?: number;
   description?: string;
   startDate?: string;
   endDate?: string;
   vat?: number;
+}
+
+export function isCompetition(product: Product): boolean {
+  return product.category === 'Online Competition' || product.category === 'Live Competition';
 }
 
 export interface NewProductForm {
@@ -41,8 +45,9 @@ export interface InventoryStats {
 }
 
 export function getStockStatus(product: Product): StockStatus {
+  if (product.quantity === undefined) return 'in-stock';
   if (product.quantity === 0) return 'out-of-stock';
-  if (product.quantity <= product.lowStockThreshold) return 'low-stock';
+  if (product.lowStockThreshold !== undefined && product.quantity <= product.lowStockThreshold) return 'low-stock';
   return 'in-stock';
 }
 

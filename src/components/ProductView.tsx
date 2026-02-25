@@ -1,5 +1,5 @@
 import { ArrowLeft, Package } from 'lucide-react';
-import { Product, getStockStatus } from '../types/inventory';
+import { Product, getStockStatus, isCompetition } from '../types/inventory';
 
 interface ProductViewProps {
   product: Product;
@@ -30,7 +30,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function ProductView({ product, onBack }: ProductViewProps) {
-  const status = getStockStatus(product);
+  const competition = isCompetition(product);
+  const status = competition ? null : getStockStatus(product);
 
   const properties = [
     { label: 'Product ID', value: product.id },
@@ -39,8 +40,8 @@ export default function ProductView({ product, onBack }: ProductViewProps) {
     ...(product.vat !== undefined ? [{ label: 'VAT', value: `${product.vat}%` }] : []),
     ...(product.startDate ? [{ label: 'Start Date', value: product.startDate }] : []),
     ...(product.endDate ? [{ label: 'End Date', value: product.endDate }] : []),
-    { label: 'Quantity', value: product.quantity.toLocaleString() },
-    { label: 'Low Stock Threshold', value: product.lowStockThreshold.toLocaleString() },
+    ...(product.quantity !== undefined ? [{ label: 'Quantity', value: product.quantity.toLocaleString() }] : []),
+    ...(product.lowStockThreshold !== undefined ? [{ label: 'Low Stock Threshold', value: product.lowStockThreshold.toLocaleString() }] : []),
   ];
 
   return (
@@ -72,11 +73,13 @@ export default function ProductView({ product, onBack }: ProductViewProps) {
               >
                 {product.category}
               </span>
-              <span
-                className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${STATUS_STYLES[status]}`}
-              >
-                {STATUS_LABELS[status]}
-              </span>
+              {status && (
+                <span
+                  className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${STATUS_STYLES[status]}`}
+                >
+                  {STATUS_LABELS[status]}
+                </span>
+              )}
             </div>
           </div>
         </div>
