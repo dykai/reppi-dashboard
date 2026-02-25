@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Trash2, Minus, Plus, ChevronDown } from 'lucide-react';
+import { Search, Trash2, Minus, Plus, ChevronDown, Eye } from 'lucide-react';
 import { Product, ALL_CATEGORIES, getStockStatus } from '../types/inventory';
 
 interface ProductTableProps {
@@ -7,6 +7,7 @@ interface ProductTableProps {
   onDelete: (id: string) => void;
   onUpdateQuantity: (id: string, delta: number) => void;
   onSetQuantity: (id: string, quantity: number) => void;
+  onViewProduct: (product: Product) => void;
 }
 
 const STATUS_STYLES = {
@@ -35,6 +36,7 @@ export default function ProductTable({
   onDelete,
   onUpdateQuantity,
   onSetQuantity,
+  onViewProduct,
 }: ProductTableProps) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -164,7 +166,12 @@ export default function ProductTable({
                       className="hover:bg-indigo-50/30 transition-colors group"
                     >
                       <td className="px-4 py-3">
-                        <p className="font-medium text-gray-900 text-sm">{product.name}</p>
+                        <button
+                          onClick={() => onViewProduct(product)}
+                          className="font-medium text-gray-900 text-sm hover:text-indigo-600 hover:underline transition-colors text-left"
+                        >
+                          {product.name}
+                        </button>
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs text-gray-500">{product.sku}</span>
@@ -229,13 +236,22 @@ export default function ProductTable({
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => confirmDelete(product.id)}
-                          className="h-7 w-7 flex items-center justify-center rounded-md text-gray-300 hover:text-rose-500 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all"
-                          title="Delete product"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => onViewProduct(product)}
+                            className="h-7 w-7 flex items-center justify-center rounded-md text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 opacity-0 group-hover:opacity-100 transition-all"
+                            title="View product"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(product.id)}
+                            className="h-7 w-7 flex items-center justify-center rounded-md text-gray-300 hover:text-rose-500 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all"
+                            title="Delete product"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
