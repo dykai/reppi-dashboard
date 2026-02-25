@@ -1,5 +1,5 @@
 import { ArrowLeft, Package } from 'lucide-react';
-import { Product, getStockStatus } from '../types/inventory';
+import { Product, getStockStatus, isCompetition } from '../types/inventory';
 
 interface ProductViewProps {
   product: Product;
@@ -25,17 +25,23 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Home & Garden': 'bg-teal-100 text-teal-700',
   Sports: 'bg-orange-100 text-orange-700',
   Beauty: 'bg-pink-100 text-pink-700',
+  'Online Competition': 'bg-cyan-100 text-cyan-700',
+  'Live Competition': 'bg-yellow-100 text-yellow-700',
 };
 
 export default function ProductView({ product, onBack }: ProductViewProps) {
-  const status = getStockStatus(product);
+  const competition = isCompetition(product);
+  const status = competition ? null : getStockStatus(product);
 
   const properties = [
     { label: 'Product ID', value: product.id },
     { label: 'SKU', value: product.sku },
     { label: 'Price', value: `$${product.price.toFixed(2)}` },
-    { label: 'Quantity', value: product.quantity.toLocaleString() },
-    { label: 'Low Stock Threshold', value: product.lowStockThreshold.toLocaleString() },
+    ...(product.vat !== undefined ? [{ label: 'VAT', value: `${product.vat}%` }] : []),
+    ...(product.startDate ? [{ label: 'Start Date', value: product.startDate }] : []),
+    ...(product.endDate ? [{ label: 'End Date', value: product.endDate }] : []),
+    ...(product.quantity !== undefined ? [{ label: 'Quantity', value: product.quantity.toLocaleString() }] : []),
+    ...(product.lowStockThreshold !== undefined ? [{ label: 'Low Stock Threshold', value: product.lowStockThreshold.toLocaleString() }] : []),
   ];
 
   return (
@@ -67,11 +73,13 @@ export default function ProductView({ product, onBack }: ProductViewProps) {
               >
                 {product.category}
               </span>
-              <span
-                className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${STATUS_STYLES[status]}`}
-              >
-                {STATUS_LABELS[status]}
-              </span>
+              {status && (
+                <span
+                  className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${STATUS_STYLES[status]}`}
+                >
+                  {STATUS_LABELS[status]}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -87,6 +95,14 @@ export default function ProductView({ product, onBack }: ProductViewProps) {
             </div>
           ))}
         </div>
+        {product.description && (
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+              Description
+            </p>
+            <p className="text-sm text-gray-700">{product.description}</p>
+          </div>
+        )}
       </div>
     </div>
   );

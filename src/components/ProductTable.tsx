@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Trash2, Minus, Plus, ChevronDown, Eye } from 'lucide-react';
-import { Product, ALL_CATEGORIES, getStockStatus } from '../types/inventory';
+import { Product, ALL_CATEGORIES, getStockStatus, isCompetition } from '../types/inventory';
 
 interface ProductTableProps {
   products: Product[];
@@ -29,6 +29,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Home & Garden': 'bg-teal-100 text-teal-700',
   Sports: 'bg-orange-100 text-orange-700',
   Beauty: 'bg-pink-100 text-pink-700',
+  'Online Competition': 'bg-cyan-100 text-cyan-700',
+  'Live Competition': 'bg-yellow-100 text-yellow-700',
 };
 
 export default function ProductTable({
@@ -159,6 +161,7 @@ export default function ProductTable({
               ) : (
                 filtered.map((product) => {
                   const status = getStockStatus(product);
+                  const competition = isCompetition(product);
                   const isEditing = editingQty?.id === product.id;
                   return (
                     <tr
@@ -189,6 +192,9 @@ export default function ProductTable({
                         </span>
                       </td>
                       <td className="px-4 py-3">
+                        {competition ? (
+                          <span className="text-xs text-gray-400">—</span>
+                        ) : (
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => onUpdateQuantity(product.id, -1)}
@@ -227,13 +233,18 @@ export default function ProductTable({
                             <Plus className="h-3 w-3 text-gray-600" />
                           </button>
                         </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
+                        {competition ? (
+                          <span className="text-xs text-gray-400">—</span>
+                        ) : (
                         <span
                           className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${STATUS_STYLES[status]}`}
                         >
                           {STATUS_LABELS[status]}
                         </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">

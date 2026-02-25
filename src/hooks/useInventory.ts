@@ -73,7 +73,7 @@ export function useInventory() {
     (id: string, delta: number) => {
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === id ? { ...p, quantity: Math.max(0, p.quantity + delta) } : p,
+          p.id === id ? { ...p, quantity: Math.max(0, (p.quantity ?? 0) + delta) } : p,
         ),
       );
     },
@@ -88,7 +88,7 @@ export function useInventory() {
 
   const stats: InventoryStats = {
     totalProducts: products.length,
-    totalValue: products.reduce((sum, p) => sum + p.price * p.quantity, 0),
+    totalValue: products.reduce((sum, p) => sum + p.price * (p.quantity ?? 0), 0),
     lowStockCount: products.filter((p) => getStockStatus(p) === 'low-stock').length,
     outOfStockCount: products.filter((p) => getStockStatus(p) === 'out-of-stock').length,
   };
