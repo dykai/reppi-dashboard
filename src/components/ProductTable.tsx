@@ -29,6 +29,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Home & Garden': 'bg-teal-100 text-teal-700',
   Sports: 'bg-orange-100 text-orange-700',
   Beauty: 'bg-pink-100 text-pink-700',
+  'Online Competition': 'bg-cyan-100 text-cyan-700',
+  'Live Competition': 'bg-yellow-100 text-yellow-700',
 };
 
 export default function ProductTable({

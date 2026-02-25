@@ -6,7 +6,9 @@ export type Category =
   | 'Food & Beverage'
   | 'Home & Garden'
   | 'Sports'
-  | 'Beauty';
+  | 'Beauty'
+  | 'Online Competition'
+  | 'Live Competition';
 
 export interface Product {
   id: string;
@@ -16,6 +18,10 @@ export interface Product {
   price: number;
   quantity: number;
   lowStockThreshold: number;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  vat?: number;
 }
 
 export interface NewProductForm {
@@ -47,4 +53,6 @@ export const ALL_CATEGORIES: Category[] = [
   'Home & Garden',
   'Sports',
   'Beauty',
+  'Online Competition',
+  'Live Competition',
 ];

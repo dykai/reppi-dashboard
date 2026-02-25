@@ -25,6 +25,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Home & Garden': 'bg-teal-100 text-teal-700',
   Sports: 'bg-orange-100 text-orange-700',
   Beauty: 'bg-pink-100 text-pink-700',
+  'Online Competition': 'bg-cyan-100 text-cyan-700',
+  'Live Competition': 'bg-yellow-100 text-yellow-700',
 };
 
 export default function ProductView({ product, onBack }: ProductViewProps) {
@@ -34,6 +36,9 @@ export default function ProductView({ product, onBack }: ProductViewProps) {
     { label: 'Product ID', value: product.id },
     { label: 'SKU', value: product.sku },
     { label: 'Price', value: `$${product.price.toFixed(2)}` },
+    ...(product.vat !== undefined ? [{ label: 'VAT', value: `${product.vat}%` }] : []),
+    ...(product.startDate ? [{ label: 'Start Date', value: product.startDate }] : []),
+    ...(product.endDate ? [{ label: 'End Date', value: product.endDate }] : []),
     { label: 'Quantity', value: product.quantity.toLocaleString() },
     { label: 'Low Stock Threshold', value: product.lowStockThreshold.toLocaleString() },
   ];
@@ -87,6 +92,14 @@ export default function ProductView({ product, onBack }: ProductViewProps) {
             </div>
           ))}
         </div>
+        {product.description && (
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+              Description
+            </p>
+            <p className="text-sm text-gray-700">{product.description}</p>
+          </div>
+        )}
       </div>
     </div>
   );
