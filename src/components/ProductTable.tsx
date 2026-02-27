@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Trash2, Minus, Plus, ChevronDown, Eye } from 'lucide-react';
 import { Product, ALL_CATEGORIES, getStockStatus, isCompetition } from '../types/inventory';
 
@@ -40,10 +40,12 @@ export default function ProductTable({
   onSetQuantity,
   onViewProduct,
 }: ProductTableProps) {
+  const PAGE_SIZE = 20;
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [editingQty, setEditingQty] = useState<{ id: string; value: string } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filtered = products.filter((p) => {
     const matchSearch =
@@ -52,6 +54,51 @@ export default function ProductTable({
     const matchCategory = categoryFilter === 'All' || p.category === categoryFilter;
     return matchSearch && matchCategory;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const pageEnd = pageStart + PAGE_SIZE;
+  const paginatedProducts = filtered.slice(pageStart, pageEnd);
+  const visibleStart = filtered.length === 0 ? 0 : pageStart + 1;
+  const visibleEnd = Math.min(pageEnd, filtered.length);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  function getPaginationItems(): Array<number | string> {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const items: Array<number | string> = [1];
+
+    if (currentPage > 3) {
+      items.push('left-ellipsis');
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let page = start; page <= end; page += 1) {
+      items.push(page);
+    }
+
+    if (currentPage < totalPages - 2) {
+      items.push('right-ellipsis');
+    }
+
+    items.push(totalPages);
+    return items;
+  }
+
+  const paginationItems = getPaginationItems();
 
   function confirmDelete(id: string) {
     setPendingDelete(id);
@@ -159,7 +206,7 @@ export default function ProductTable({
                   </td>
                 </tr>
               ) : (
-                filtered.map((product) => {
+                paginatedProducts.map((product) => {
                   const status = getStockStatus(product);
                   const competition = isCompetition(product);
                   const isEditing = editingQty?.id === product.id;
@@ -273,8 +320,52 @@ export default function ProductTable({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-gray-100 text-xs text-gray-400">
-          Showing {filtered.length} of {products.length} products
+        <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs text-gray-400">
+            Showing {visibleStart}-{visibleEnd} of {filtered.length} products
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 || filtered.length === 0}
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {paginationItems.map((item) => {
+                if (typeof item !== 'number') {
+                  return (
+                    <span key={item} className="px-1 text-xs text-gray-400">
+                      …
+                    </span>
+                  );
+                }
+
+                const active = item === currentPage;
+                return (
+                  <button
+                    key={item}
+                    onClick={() => setCurrentPage(item)}
+                    className={`h-7 min-w-7 px-2 text-xs font-medium rounded-md border transition-colors ${
+                      active
+                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages || filtered.length === 0}
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </>

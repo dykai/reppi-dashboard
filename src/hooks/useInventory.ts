@@ -2,16 +2,45 @@ import { useState, useEffect, useCallback } from 'react';
 import { Product, NewProductForm, InventoryStats, getStockStatus } from '../types/inventory';
 import { INITIAL_PRODUCTS } from '../data/products';
 
-const STORAGE_KEY = 'reppi_inventory';
+const STORAGE_KEY = 'reppi_inventory_v2';
+const STORAGE_RESET_KEY = 'reppi_inventory_reset_version';
+const STORAGE_RESET_VERSION = '2026-02-27-full-seed-reset';
+
+function cloneInitialProducts(): Product[] {
+  return INITIAL_PRODUCTS.map((product) => ({ ...product }));
+}
+
+function hasAllSeedProducts(products: Product[]): boolean {
+  const ids = new Set(products.map((product) => product.id));
+  return INITIAL_PRODUCTS.every((product) => ids.has(product.id));
+}
+
+function resetStorageToInitial(): Product[] {
+  const seeded = cloneInitialProducts();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+  localStorage.setItem(STORAGE_RESET_KEY, STORAGE_RESET_VERSION);
+  return seeded;
+}
 
 function loadFromStorage(): Product[] {
   try {
+    const resetVersion = localStorage.getItem(STORAGE_RESET_KEY);
+    if (resetVersion !== STORAGE_RESET_VERSION) {
+      return resetStorageToInitial();
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Product[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as Product[];
+      if (hasAllSeedProducts(parsed)) {
+        return parsed;
+      }
+      return resetStorageToInitial();
+    }
   } catch {
     // ignore
   }
-  return INITIAL_PRODUCTS;
+  return resetStorageToInitial();
 }
 
 function saveToStorage(products: Product[]): void {
