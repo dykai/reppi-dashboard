@@ -1,7 +1,7 @@
 import { ArrowLeft, Package } from 'lucide-react';
-import { Competition } from '../types/inventory';
+import { Competition } from '../types/competition';
 
-interface ProductViewProps {
+interface CompetitionViewProps {
   competition: Competition;
   onBack: () => void;
 }
@@ -11,7 +11,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Live Competition': 'bg-yellow-100 text-yellow-700',
 };
 
-export default function ProductView({ competition, onBack }: ProductViewProps) {
+export default function CompetitionView({ competition, onBack }: CompetitionViewProps) {
   const properties = [
     { label: 'Competition ID', value: competition.id },
     { label: 'SKU', value: competition.sku },

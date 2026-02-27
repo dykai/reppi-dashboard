@@ -1,4 +1,4 @@
-import { Competition } from '../types/inventory';
+import { Competition } from '../types/competition';
 
 export const INITIAL_COMPETITIONS: Competition[] = [
     // Online Competition

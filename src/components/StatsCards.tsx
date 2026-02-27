@@ -1,37 +1,37 @@
-import { ShoppingCart, DollarSign, AlertTriangle, XCircle } from 'lucide-react';
-import { InventoryStats } from '../types/inventory';
+import { Trophy, DollarSign, Wifi, Users } from 'lucide-react';
+import { CompetitionStats } from '../types/competition';
 
 interface StatsCardsProps {
-  stats: InventoryStats;
+  stats: CompetitionStats;
 }
 
 export default function StatsCards({ stats }: StatsCardsProps) {
   const cards = [
     {
-      label: 'Total Products',
-      value: stats.totalProducts.toLocaleString(),
-      icon: ShoppingCart,
+      label: 'Total Competitions',
+      value: stats.totalCompetitions.toLocaleString(),
+      icon: Trophy,
       color: 'bg-indigo-50 text-indigo-600',
       ring: 'ring-indigo-100',
     },
     {
-      label: 'Inventory Value',
-      value: `$${stats.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      label: 'Total Entry Fees',
+      value: `$${stats.totalEntryFees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: DollarSign,
       color: 'bg-emerald-50 text-emerald-600',
       ring: 'ring-emerald-100',
     },
     {
-      label: 'Low Stock Items',
-      value: stats.lowStockCount.toLocaleString(),
-      icon: AlertTriangle,
+      label: 'Online Competitions',
+      value: stats.onlineCompetitions.toLocaleString(),
+      icon: Wifi,
       color: 'bg-amber-50 text-amber-600',
       ring: 'ring-amber-100',
     },
     {
-      label: 'Out of Stock',
-      value: stats.outOfStockCount.toLocaleString(),
-      icon: XCircle,
+      label: 'Live Competitions',
+      value: stats.liveCompetitions.toLocaleString(),
+      icon: Users,
       color: 'bg-rose-50 text-rose-600',
       ring: 'ring-rose-100',
     },

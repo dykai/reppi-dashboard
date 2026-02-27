@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { ALL_COMPETITION_CATEGORIES, NewCompetitionForm } from '../types/inventory';
+import { ALL_COMPETITION_CATEGORIES, NewCompetitionForm } from '../types/competition';
 
-interface AddProductModalProps {
+interface AddCompetitionModalProps {
   onClose: () => void;
   onAdd: (form: NewCompetitionForm) => void;
 }
@@ -18,7 +18,7 @@ const EMPTY_FORM: NewCompetitionForm = {
   description: '',
 };
 
-export default function AddProductModal({ onClose, onAdd }: AddProductModalProps) {
+export default function AddCompetitionModal({ onClose, onAdd }: AddCompetitionModalProps) {
   const [form, setForm] = useState<NewCompetitionForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof NewCompetitionForm, string>>>({});
 

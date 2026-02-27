@@ -1,10 +1,10 @@
 import { Package } from 'lucide-react';
 
 interface HeaderProps {
-  onAddProduct: () => void;
+  onAddCompetition: () => void;
 }
 
-export default function Header({ onAddProduct }: HeaderProps) {
+export default function Header({ onAddCompetition }: HeaderProps) {
   return (
     <header className="bg-black text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,16 +15,16 @@ export default function Header({ onAddProduct }: HeaderProps) {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight">Reppi Dashboard</h1>
-              <p className="text-[#d26512] text-xs leading-none">Inventory Management</p>
+              <p className="text-[#d26512] text-xs leading-none">Competition Management</p>
             </div>
           </div>
 
           <button
-            onClick={onAddProduct}
+            onClick={onAddCompetition}
             className="flex items-center gap-2 bg-white text-[#d26512] px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-orange-50 active:scale-95 transition-all duration-150"
           >
             <span className="text-lg leading-none">+</span>
-            Add Product
+            Add Competition
           </button>
         </div>
       </div>

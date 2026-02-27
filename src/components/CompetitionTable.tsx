@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Search, Trash2, ChevronDown, Eye } from 'lucide-react';
-import { ALL_COMPETITION_CATEGORIES, Competition } from '../types/inventory';
+import { ALL_COMPETITION_CATEGORIES, Competition } from '../types/competition';
 
-interface ProductTableProps {
+interface CompetitionTableProps {
   competitions: Competition[];
   onDelete: (id: string) => void;
   onViewCompetition: (competition: Competition) => void;
@@ -13,11 +13,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Live Competition': 'bg-yellow-100 text-yellow-700',
 };
 
-export default function ProductTable({
+export default function CompetitionTable({
   competitions,
   onDelete,
   onViewCompetition,
-}: ProductTableProps) {
+}: CompetitionTableProps) {
   const PAGE_SIZE = 20;
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -35,7 +35,7 @@ export default function ProductTable({
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageStart = (currentPage - 1) * PAGE_SIZE;
   const pageEnd = pageStart + PAGE_SIZE;
-  const paginatedProducts = filtered.slice(pageStart, pageEnd);
+  const paginatedCompetitions = filtered.slice(pageStart, pageEnd);
   const visibleStart = filtered.length === 0 ? 0 : pageStart + 1;
   const visibleEnd = Math.min(pageEnd, filtered.length);
 
@@ -169,7 +169,7 @@ export default function ProductTable({
                   </td>
                 </tr>
               ) : (
-                paginatedProducts.map((competition) => {
+                paginatedCompetitions.map((competition) => {
                   return (
                     <tr
                       key={competition.id}

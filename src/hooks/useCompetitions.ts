@@ -4,11 +4,11 @@ import {
   CompetitionCategory,
   CompetitionStats,
   NewCompetitionForm,
-} from '../types/inventory';
-import { INITIAL_COMPETITIONS } from '../data/products';
+} from '../types/competition';
+import { INITIAL_COMPETITIONS } from '../data/competitions';
 
 const STORAGE_KEY = 'reppi_competitions_v1';
-const STORAGE_RESET_KEY = 'reppi_inventory_reset_version';
+const STORAGE_RESET_KEY = 'reppi_competitions_reset_version';
 const STORAGE_RESET_VERSION = '2026-02-27-competition-model-reset';
 
 const COMPETITION_CATEGORIES: CompetitionCategory[] = ['Online Competition', 'Live Competition'];

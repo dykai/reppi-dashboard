@@ -1,40 +1,40 @@
 import { useState } from 'react';
-import { useInventory } from './hooks/useInventory';
+import { useCompetitions } from './hooks/useCompetitions';
 import Header from './components/Header';
 import StatsCards from './components/StatsCards';
-import ProductTable from './components/ProductTable';
-import ProductView from './components/ProductView';
-import AddProductModal from './components/AddProductModal';
+import CompetitionTable from './components/CompetitionTable';
+import CompetitionView from './components/CompetitionView';
+import AddCompetitionModal from './components/AddCompetitionModal';
 import ToastContainer from './components/ToastContainer';
-import { Product } from './types/inventory';
+import { Competition } from './types/competition';
 
 export default function App() {
-  const { products, stats, toasts, addProduct, deleteProduct, updateQuantity, setQuantity } =
-    useInventory();
+  const { competitions, stats, toasts, addCompetition, deleteCompetition } = useCompetitions();
   const [showModal, setShowModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onAddProduct={() => setShowModal(true)} />
+      <Header onAddCompetition={() => setShowModal(true)} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <StatsCards stats={stats} />
-        {selectedProduct ? (
-          <ProductView product={selectedProduct} onBack={() => setSelectedProduct(null)} />
+        {selectedCompetition ? (
+          <CompetitionView
+            competition={selectedCompetition}
+            onBack={() => setSelectedCompetition(null)}
+          />
         ) : (
-          <ProductTable
-            products={products}
-            onDelete={deleteProduct}
-            onUpdateQuantity={updateQuantity}
-            onSetQuantity={setQuantity}
-            onViewProduct={setSelectedProduct}
+          <CompetitionTable
+            competitions={competitions}
+            onDelete={deleteCompetition}
+            onViewCompetition={setSelectedCompetition}
           />
         )}
       </main>
 
       {showModal && (
-        <AddProductModal onClose={() => setShowModal(false)} onAdd={addProduct} />
+        <AddCompetitionModal onClose={() => setShowModal(false)} onAdd={addCompetition} />
       )}
 
       <ToastContainer toasts={toasts} />

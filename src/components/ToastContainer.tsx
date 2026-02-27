@@ -1,5 +1,5 @@
 import { CheckCircle, XCircle } from 'lucide-react';
-import { Toast } from '../hooks/useInventory';
+import { Toast } from '../hooks/useCompetitions';
 
 interface ToastContainerProps {
   toasts: Toast[];
