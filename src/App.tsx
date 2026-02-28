@@ -17,7 +17,7 @@ export default function App() {
     deleteCompetition,
     updateCompetitionDivisions,
   } = useCompetitions();
-  const { users, athletes } = useUsers();
+  const { users, athletes, addAthlete } = useUsers();
   const [showModal, setShowModal] = useState(false);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
   const selectedCompetition =
@@ -36,6 +36,7 @@ export default function App() {
             competition={selectedCompetition}
             users={users}
             athletes={athletes}
+            onAddAthlete={addAthlete}
             onBack={() => setSelectedCompetitionId(null)}
             onUpdateDivisions={updateCompetitionDivisions}
           />

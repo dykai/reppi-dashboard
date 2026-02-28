@@ -9,6 +9,12 @@ interface CompetitionViewProps {
   competition: Competition;
   users: User[];
   athletes: Athlete[];
+  onAddAthlete: (input: {
+    userId: string;
+    competitionId: string;
+    divisionIndex: number;
+    boxName: string;
+  }) => boolean;
   onBack: () => void;
   onUpdateDivisions: (competitionId: string, divisions: Division[]) => void;
 }
@@ -22,12 +28,17 @@ export default function CompetitionView({
   competition,
   users,
   athletes,
+  onAddAthlete,
   onBack,
   onUpdateDivisions,
 }: CompetitionViewProps) {
   const [editableDivisions, setEditableDivisions] = useState<Division[]>(competition.divisions);
   const [divisionError, setDivisionError] = useState<string | null>(null);
   const [showBackWarning, setShowBackWarning] = useState(false);
+  const [athleteFormByDivision, setAthleteFormByDivision] = useState<
+    Record<number, { userId: string; boxName: string }>
+  >({});
+  const [athleteErrorByDivision, setAthleteErrorByDivision] = useState<Record<number, string>>({});
 
   useEffect(() => {
     setEditableDivisions(
@@ -37,6 +48,8 @@ export default function CompetitionView({
     );
     setDivisionError(null);
     setShowBackWarning(false);
+    setAthleteFormByDivision({});
+    setAthleteErrorByDivision({});
   }, [competition]);
 
   const hasDivisionChanges = useMemo(
@@ -163,6 +176,111 @@ export default function CompetitionView({
     [athletes, competition.id],
   );
 
+  const sortedUsers = useMemo(
+    () =>
+      [...users].sort((firstUser, secondUser) => {
+        const firstFullName = `${firstUser.firstName} ${firstUser.lastName}`.toLowerCase();
+        const secondFullName = `${secondUser.firstName} ${secondUser.lastName}`.toLowerCase();
+        return firstFullName.localeCompare(secondFullName);
+      }),
+    [users],
+  );
+
+  function getAthleteForm(divisionIndex: number): { userId: string; boxName: string } {
+    return athleteFormByDivision[divisionIndex] ?? { userId: '', boxName: '' };
+  }
+
+  function updateAthleteForm(divisionIndex: number, updates: Partial<{ userId: string; boxName: string }>) {
+    setAthleteFormByDivision((previous) => ({
+      ...previous,
+      [divisionIndex]: {
+        ...getAthleteForm(divisionIndex),
+        ...updates,
+      },
+    }));
+
+    if (athleteErrorByDivision[divisionIndex]) {
+      setAthleteErrorByDivision((previous) => {
+        const next = { ...previous };
+        delete next[divisionIndex];
+        return next;
+      });
+    }
+  }
+
+  function addAthleteToDivision(division: Division) {
+    const form = getAthleteForm(division.index);
+
+    if (hasDivisionChanges) {
+      setAthleteErrorByDivision((previous) => ({
+        ...previous,
+        [division.index]: 'Save division changes before adding athletes.',
+      }));
+      return;
+    }
+
+    if (!form.userId) {
+      setAthleteErrorByDivision((previous) => ({
+        ...previous,
+        [division.index]: 'Select a user before adding as athlete.',
+      }));
+      return;
+    }
+
+    if (!form.boxName.trim()) {
+      setAthleteErrorByDivision((previous) => ({
+        ...previous,
+        [division.index]: 'Enter a box name before adding as athlete.',
+      }));
+      return;
+    }
+
+    if (division.enrolledAthletes >= division.maxAthletes) {
+      setAthleteErrorByDivision((previous) => ({
+        ...previous,
+        [division.index]: 'Division is at full capacity.',
+      }));
+      return;
+    }
+
+    const added = onAddAthlete({
+      userId: form.userId,
+      competitionId: competition.id,
+      divisionIndex: division.index,
+      boxName: form.boxName,
+    });
+
+    if (!added) {
+      setAthleteErrorByDivision((previous) => ({
+        ...previous,
+        [division.index]: 'Unable to add athlete. Check selected user and box name.',
+      }));
+      return;
+    }
+
+    const nextDivisions = editableDivisions.map((entry) =>
+      entry.index === division.index
+        ? { ...entry, enrolledAthletes: Math.min(entry.maxAthletes, entry.enrolledAthletes + 1) }
+        : entry,
+    );
+
+    setEditableDivisions(nextDivisions);
+    onUpdateDivisions(
+      competition.id,
+      [...nextDivisions].sort((firstDivision, secondDivision) => firstDivision.index - secondDivision.index),
+    );
+
+    setAthleteFormByDivision((previous) => ({
+      ...previous,
+      [division.index]: { userId: '', boxName: '' },
+    }));
+    setAthleteErrorByDivision((previous) => {
+      const next = { ...previous };
+      delete next[division.index];
+      return next;
+    });
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-200">
       {/* Header */}
@@ -285,6 +403,7 @@ export default function CompetitionView({
               const divisionAthletes = competitionAthletes.filter(
                 (athlete) => athlete.divisionIndex === division.index,
               );
+              const divisionForm = getAthleteForm(division.index);
 
               return (
                 <div key={`${division.index}-${divisionIndex}`} className="rounded-lg border border-gray-200 p-3 space-y-3 bg-white">
@@ -302,105 +421,158 @@ export default function CompetitionView({
                     </button>
                   </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <div className="sm:col-span-2 lg:col-span-3">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
-                    <input
-                      type="text"
-                      value={division.name}
-                      onChange={(e) => updateDivision(divisionIndex, { name: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={division.name}
+                        onChange={(e) => updateDivision(divisionIndex, { name: e.target.value })}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Index</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={division.index}
+                        onChange={(e) =>
+                          updateDivision(divisionIndex, {
+                            index: Math.max(1, Math.trunc(Number(e.target.value) || 1)),
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Enrollment Open</label>
+                      <select
+                        value={division.enrollmentOpen ? 'true' : 'false'}
+                        onChange={(e) =>
+                          updateDivision(divisionIndex, { enrollmentOpen: e.target.value === 'true' })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                      >
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Max Athletes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={division.maxAthletes}
+                        onChange={(e) =>
+                          updateDivision(divisionIndex, {
+                            maxAthletes: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Enrolled Athletes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={division.enrolledAthletes}
+                        onChange={(e) =>
+                          updateDivision(divisionIndex, {
+                            enrolledAthletes: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Fee</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={division.fee}
+                        onChange={(e) =>
+                          updateDivision(divisionIndex, {
+                            fee: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Team Size</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={division.teamSize}
+                        onChange={(e) =>
+                          updateDivision(divisionIndex, {
+                            teamSize: Math.max(1, Math.trunc(Number(e.target.value) || 1)),
+                          })
+                        }
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Index</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={division.index}
-                      onChange={(e) =>
-                        updateDivision(divisionIndex, {
-                          index: Math.max(1, Math.trunc(Number(e.target.value) || 1)),
-                        })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
+
+                  <div className="rounded-md border border-gray-200 bg-indigo-50/40 p-3 space-y-2">
+                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Add Athlete to Division
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="sm:col-span-1">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">User</label>
+                        <select
+                          value={divisionForm.userId}
+                          onChange={(event) =>
+                            updateAthleteForm(division.index, { userId: event.target.value })
+                          }
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                        >
+                          <option value="">Select user</option>
+                          {sortedUsers.map((user) => (
+                            <option key={user.id} value={user.id}>
+                              {`${user.firstName} ${user.lastName}`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-1">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Box Name</label>
+                        <input
+                          type="text"
+                          value={divisionForm.boxName}
+                          onChange={(event) =>
+                            updateAthleteForm(division.index, { boxName: event.target.value })
+                          }
+                          placeholder="Enter box name"
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-1 flex items-end">
+                        <button
+                          type="button"
+                          onClick={() => addAthleteToDivision(division)}
+                          className="w-full inline-flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Add Athlete
+                        </button>
+                      </div>
+                    </div>
+
+                    {athleteErrorByDivision[division.index] && (
+                      <p className="text-xs text-rose-500">{athleteErrorByDivision[division.index]}</p>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Enrollment Open</label>
-                    <select
-                      value={division.enrollmentOpen ? 'true' : 'false'}
-                      onChange={(e) =>
-                        updateDivision(divisionIndex, { enrollmentOpen: e.target.value === 'true' })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-                    >
-                      <option value="false">No</option>
-                      <option value="true">Yes</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Max Athletes</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={division.maxAthletes}
-                      onChange={(e) =>
-                        updateDivision(divisionIndex, {
-                          maxAthletes: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
-                        })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Enrolled Athletes</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={division.enrolledAthletes}
-                      onChange={(e) =>
-                        updateDivision(divisionIndex, {
-                          enrolledAthletes: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
-                        })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Fee</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={division.fee}
-                      onChange={(e) =>
-                        updateDivision(divisionIndex, {
-                          fee: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
-                        })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Team Size</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={division.teamSize}
-                      onChange={(e) =>
-                        updateDivision(divisionIndex, {
-                          teamSize: Math.max(1, Math.trunc(Number(e.target.value) || 1)),
-                        })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
 
                   <div className="rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">
                     <div className="flex items-center justify-between">
