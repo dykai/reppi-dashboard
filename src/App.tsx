@@ -11,6 +11,8 @@ import ToastContainer from './components/ToastContainer';
 import Sidebar, { SidebarItem } from './components/Sidebar';
 import UsersView from './components/UsersView';
 
+type CompetitionSection = 'competition' | 'divisions' | 'athletes';
+
 export default function App() {
   const {
     competitions,
@@ -24,6 +26,8 @@ export default function App() {
   const [activeItem, setActiveItem] = useState<SidebarItem>('home');
   const [showModal, setShowModal] = useState(false);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
+  const [activeCompetitionSection, setActiveCompetitionSection] =
+    useState<CompetitionSection>('competition');
   const selectedCompetition =
     selectedCompetitionId === null
       ? null
@@ -32,6 +36,15 @@ export default function App() {
   const totalUsers = users.length;
   const totalAthletes = athletes.length;
   const activeCompetitionEnrollments = new Set(athletes.map((athlete) => athlete.competitionId)).size;
+
+  function handleSidebarSelect(item: SidebarItem, options?: { fromSubItem?: boolean }) {
+    setActiveItem(item);
+
+    if (item === 'competitions' && !options?.fromSubItem) {
+      setSelectedCompetitionId(null);
+      setActiveCompetitionSection('competition');
+    }
+  }
 
   function renderHome() {
     return (
@@ -96,7 +109,11 @@ export default function App() {
             users={users}
             athletes={athletes}
             onAddAthlete={addAthlete}
-            onBack={() => setSelectedCompetitionId(null)}
+            section={activeCompetitionSection}
+            onBack={() => {
+              setSelectedCompetitionId(null);
+              setActiveCompetitionSection('competition');
+            }}
             onUpdateDivisions={updateCompetitionDivisions}
           />
         ) : (
@@ -105,7 +122,10 @@ export default function App() {
             <CompetitionTable
               competitions={competitions}
               onDelete={deleteCompetition}
-              onViewCompetition={(competition) => setSelectedCompetitionId(competition.id)}
+              onViewCompetition={(competition) => {
+                setSelectedCompetitionId(competition.id);
+                setActiveCompetitionSection('competition');
+              }}
             />
           </>
         )}
@@ -130,7 +150,13 @@ export default function App() {
       <Header />
 
       <div className="md:flex">
-        <Sidebar activeItem={activeItem} onSelect={setActiveItem} />
+        <Sidebar
+          activeItem={activeItem}
+          onSelect={handleSidebarSelect}
+          selectedCompetitionName={selectedCompetition?.name ?? null}
+          activeCompetitionSection={activeCompetitionSection}
+          onSelectCompetitionSection={setActiveCompetitionSection}
+        />
 
         <div className="flex-1 min-w-0">
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{renderContent()}</main>

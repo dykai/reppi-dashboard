@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Home, Menu, Trophy, Users, X } from 'lucide-react';
 
 export type SidebarItem = 'home' | 'competitions' | 'users';
+export type CompetitionSidebarSection = 'competition' | 'divisions' | 'athletes';
 
 interface SidebarProps {
   activeItem: SidebarItem;
-  onSelect: (item: SidebarItem) => void;
+  onSelect: (item: SidebarItem, options?: { fromSubItem?: boolean }) => void;
+  selectedCompetitionName: string | null;
+  activeCompetitionSection: CompetitionSidebarSection;
+  onSelectCompetitionSection: (section: CompetitionSidebarSection) => void;
 }
 
 const ITEMS: Array<{ id: SidebarItem; label: string; icon: typeof Home }> = [
@@ -14,7 +18,13 @@ const ITEMS: Array<{ id: SidebarItem; label: string; icon: typeof Home }> = [
   { id: 'users', label: 'Users', icon: Users },
 ];
 
-export default function Sidebar({ activeItem, onSelect }: SidebarProps) {
+export default function Sidebar({
+  activeItem,
+  onSelect,
+  selectedCompetitionName,
+  activeCompetitionSection,
+  onSelectCompetitionSection,
+}: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -56,6 +66,18 @@ export default function Sidebar({ activeItem, onSelect }: SidebarProps) {
     setMobileOpen(false);
   }
 
+  function selectCompetitionSection(section: CompetitionSidebarSection) {
+    onSelect('competitions', { fromSubItem: true });
+    onSelectCompetitionSection(section);
+    setMobileOpen(false);
+  }
+
+  const competitionSubItems: Array<{ id: CompetitionSidebarSection; label: string }> = [
+    { id: 'competition', label: selectedCompetitionName ?? 'Competition' },
+    { id: 'divisions', label: 'Divisions' },
+    { id: 'athletes', label: 'Athletes' },
+  ];
+
   return (
     <>
       <div ref={mobileContainerRef} className="md:hidden fixed top-0 right-0 z-50 text-white">
@@ -77,19 +99,45 @@ export default function Sidebar({ activeItem, onSelect }: SidebarProps) {
                 const Icon = item.icon;
                 const active = activeItem === item.id;
                 return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => selectItem(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      active
-                        ? 'bg-white text-[#d26512]'
-                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </button>
+                  <div key={item.id} className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => selectItem(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                        active
+                          ? 'bg-white text-[#d26512]'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </button>
+
+                    {item.id === 'competitions' && selectedCompetitionName && (
+                      <div className="ml-4 space-y-1">
+                        {competitionSubItems.map((subItem) => {
+                          const activeSubItem =
+                            activeItem === 'competitions' && activeCompetitionSection === subItem.id;
+                          const isNestedChild = subItem.id !== 'competition';
+                          return (
+                            <div key={subItem.id} className={isNestedChild ? 'ml-4 pl-3 border-l border-white/15' : ''}>
+                              <button
+                                type="button"
+                                onClick={() => selectCompetitionSection(subItem.id)}
+                                className={`w-full flex items-center px-3 py-2 rounded-lg text-sm transition-colors text-left ${
+                                  activeSubItem
+                                    ? 'bg-white/90 text-[#d26512] font-medium'
+                                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                                }`}
+                              >
+                                <span className="truncate">{subItem.label}</span>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </nav>
@@ -103,19 +151,45 @@ export default function Sidebar({ activeItem, onSelect }: SidebarProps) {
             const Icon = item.icon;
             const active = activeItem === item.id;
             return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelect(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-white text-[#d26512]'
-                    : 'text-white/80 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
-              </button>
+              <div key={item.id} className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => onSelect(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    active
+                      ? 'bg-white text-[#d26512]'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </button>
+
+                {item.id === 'competitions' && selectedCompetitionName && (
+                  <div className="ml-4 space-y-1">
+                    {competitionSubItems.map((subItem) => {
+                      const activeSubItem =
+                        activeItem === 'competitions' && activeCompetitionSection === subItem.id;
+                      const isNestedChild = subItem.id !== 'competition';
+                      return (
+                        <div key={subItem.id} className={isNestedChild ? 'ml-4 pl-3 border-l border-white/15' : ''}>
+                          <button
+                            type="button"
+                            onClick={() => selectCompetitionSection(subItem.id)}
+                            className={`w-full flex items-center px-3 py-2 rounded-lg text-sm transition-colors text-left ${
+                              activeSubItem
+                                ? 'bg-white/90 text-[#d26512] font-medium'
+                                : 'text-white/70 hover:text-white hover:bg-white/10'
+                            }`}
+                          >
+                            <span className="truncate">{subItem.label}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
