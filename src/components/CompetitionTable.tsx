@@ -157,6 +157,7 @@ export default function CompetitionTable({
                   'SKU',
                   'Category',
                   'Entry Fee',
+                  'Divisions',
                   'Team Size',
                   'Status',
                   'Enrollment Open',
@@ -177,12 +178,21 @@ export default function CompetitionTable({
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-16 text-center text-gray-400 text-sm">
+                  <td colSpan={12} className="py-16 text-center text-gray-400 text-sm">
                     No competitions found.
                   </td>
                 </tr>
               ) : (
                 paginatedCompetitions.map((competition) => {
+                  const enrolledAthletes = competition.divisions.reduce(
+                    (sum, division) => sum + division.enrolledAthletes,
+                    0,
+                  );
+                  const maxAthletes = competition.divisions.reduce(
+                    (sum, division) => sum + division.maxAthletes,
+                    0,
+                  );
+
                   return (
                     <tr
                       key={competition.id}
@@ -210,6 +220,11 @@ export default function CompetitionTable({
                         <span className="text-sm font-semibold text-gray-800">
                           ${competition.price.toFixed(2)}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm text-gray-600 whitespace-nowrap">
+                          {competition.divisions.length} / {enrolledAthletes}/{maxAthletes}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-sm text-gray-600">{competition.teamSize}</span>

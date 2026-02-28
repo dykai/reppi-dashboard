@@ -6,6 +6,7 @@ import {
   Competition,
   CompetitionCategory,
   CompetitionStats,
+  Division,
   NewCompetitionForm,
 } from '../types/competition';
 import { INITIAL_COMPETITIONS } from '../data/competitions';
@@ -18,6 +19,26 @@ const COMPETITION_CATEGORIES: CompetitionCategory[] = ['Online Competition', 'Li
 
 function isCompetitionCategory(category: string): category is CompetitionCategory {
   return COMPETITION_CATEGORIES.includes(category as CompetitionCategory);
+}
+
+function normalizeDivisions(divisions: Division[]): Division[] {
+  return (Array.isArray(divisions) ? divisions : [])
+    .map((division, index) => ({
+      name: division?.name?.trim() || `Division ${index + 1}`,
+      enrollmentOpen: Boolean(division?.enrollmentOpen),
+      maxAthletes: Math.max(0, Math.trunc(Number(division?.maxAthletes) || 0)),
+      enrolledAthletes: Math.max(
+        0,
+        Math.min(
+          Math.max(0, Math.trunc(Number(division?.maxAthletes) || 0)),
+          Math.trunc(Number(division?.enrolledAthletes) || 0),
+        ),
+      ),
+      fee: Math.max(0, Math.trunc(Number(division?.fee) || 0)),
+      teamSize: Math.max(1, Math.trunc(Number(division?.teamSize) || 1)),
+      index: Math.max(1, Math.trunc(Number(division?.index) || index + 1)),
+    }))
+    .sort((a, b) => a.index - b.index);
 }
 
 function normalizeCompetition(item: Competition): Competition {
@@ -36,11 +57,15 @@ function normalizeCompetition(item: Competition): Competition {
     enrollmentPeriodStart: item.enrollmentPeriodStart || undefined,
     enrollmentPeriodEnd: item.enrollmentPeriodEnd || undefined,
     visibility: ALL_COMPETITION_VISIBILITY.includes(item.visibility) ? item.visibility : 'Public',
+    divisions: normalizeDivisions(item.divisions),
   };
 }
 
 function cloneInitialCompetitions(): Competition[] {
-  return INITIAL_COMPETITIONS.map((competition) => ({ ...competition }));
+  return INITIAL_COMPETITIONS.map((competition) => ({
+    ...competition,
+    divisions: competition.divisions.map((division) => ({ ...division })),
+  }));
 }
 
 function sanitizeCompetitions(items: Competition[]): Competition[] {
@@ -125,11 +150,29 @@ export function useCompetitions() {
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
         description: form.description.trim() || undefined,
+        divisions: normalizeDivisions(form.divisions),
       };
       setCompetitions((prev) => [competition, ...prev]);
       addToast(`"${competition.name}" added.`);
     },
     [addToast],
+  );
+
+  const updateCompetitionDivisions = useCallback(
+    (competitionId: string, divisions: Division[]) => {
+      const normalized = normalizeDivisions(divisions);
+
+      setCompetitions((prev) =>
+        prev.map((competition) =>
+          competition.id === competitionId ? { ...competition, divisions: normalized } : competition,
+        ),
+      );
+
+      const competitionName =
+        competitions.find((competition) => competition.id === competitionId)?.name ?? 'Competition';
+      addToast(`"${competitionName}" divisions updated.`);
+    },
+    [addToast, competitions],
   );
 
   const deleteCompetition = useCallback(
@@ -157,5 +200,6 @@ export function useCompetitions() {
     toasts,
     addCompetition,
     deleteCompetition,
+    updateCompetitionDivisions,
   };
 }

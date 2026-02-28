@@ -21,6 +21,17 @@ export const INITIAL_COMPETITIONS: Competition[] = [
     endDate: '2026-03-31',
     price: 9.99,
     vat: 20,
+    divisions: [
+      {
+        name: 'Solo Open',
+        enrollmentOpen: true,
+        maxAthletes: 100,
+        enrolledAthletes: 42,
+        fee: 10,
+        teamSize: 1,
+        index: 1,
+      },
+    ],
   },
   {
     id: 'comp-002',
@@ -41,6 +52,26 @@ export const INITIAL_COMPETITIONS: Competition[] = [
     endDate: '2026-06-30',
     price: 19.99,
     vat: 20,
+    divisions: [
+      {
+        name: 'Junior',
+        enrollmentOpen: false,
+        maxAthletes: 80,
+        enrolledAthletes: 80,
+        fee: 15,
+        teamSize: 1,
+        index: 1,
+      },
+      {
+        name: 'Senior',
+        enrollmentOpen: true,
+        maxAthletes: 120,
+        enrolledAthletes: 37,
+        fee: 20,
+        teamSize: 1,
+        index: 2,
+      },
+    ],
   },
   {
     id: 'comp-003',
@@ -61,6 +92,17 @@ export const INITIAL_COMPETITIONS: Competition[] = [
     endDate: '2026-05-15',
     price: 14.99,
     vat: 20,
+    divisions: [
+      {
+        name: 'Open Submission',
+        enrollmentOpen: true,
+        maxAthletes: 300,
+        enrolledAthletes: 121,
+        fee: 0,
+        teamSize: 1,
+        index: 1,
+      },
+    ],
   },
   // Live Competition
   {
@@ -82,6 +124,26 @@ export const INITIAL_COMPETITIONS: Competition[] = [
     endDate: '2026-09-05',
     price: 49.99,
     vat: 10,
+    divisions: [
+      {
+        name: '5K Open',
+        enrollmentOpen: true,
+        maxAthletes: 500,
+        enrolledAthletes: 214,
+        fee: 40,
+        teamSize: 1,
+        index: 1,
+      },
+      {
+        name: '10K Open',
+        enrollmentOpen: true,
+        maxAthletes: 400,
+        enrolledAthletes: 188,
+        fee: 50,
+        teamSize: 1,
+        index: 2,
+      },
+    ],
   },
   {
     id: 'comp-005',
@@ -102,5 +164,16 @@ export const INITIAL_COMPETITIONS: Competition[] = [
     endDate: '2026-07-22',
     price: 29.99,
     vat: 10,
+    divisions: [
+      {
+        name: 'Classic A',
+        enrollmentOpen: false,
+        maxAthletes: 64,
+        enrolledAthletes: 64,
+        fee: 30,
+        teamSize: 1,
+        index: 1,
+      },
+    ],
   },
 ];

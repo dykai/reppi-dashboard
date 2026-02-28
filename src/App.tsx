@@ -6,12 +6,22 @@ import CompetitionTable from './components/CompetitionTable';
 import CompetitionView from './components/CompetitionView';
 import AddCompetitionModal from './components/AddCompetitionModal';
 import ToastContainer from './components/ToastContainer';
-import { Competition } from './types/competition';
 
 export default function App() {
-  const { competitions, stats, toasts, addCompetition, deleteCompetition } = useCompetitions();
+  const {
+    competitions,
+    stats,
+    toasts,
+    addCompetition,
+    deleteCompetition,
+    updateCompetitionDivisions,
+  } = useCompetitions();
   const [showModal, setShowModal] = useState(false);
-  const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
+  const selectedCompetition =
+    selectedCompetitionId === null
+      ? null
+      : competitions.find((competition) => competition.id === selectedCompetitionId) ?? null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,13 +32,14 @@ export default function App() {
         {selectedCompetition ? (
           <CompetitionView
             competition={selectedCompetition}
-            onBack={() => setSelectedCompetition(null)}
+            onBack={() => setSelectedCompetitionId(null)}
+            onUpdateDivisions={updateCompetitionDivisions}
           />
         ) : (
           <CompetitionTable
             competitions={competitions}
             onDelete={deleteCompetition}
-            onViewCompetition={setSelectedCompetition}
+            onViewCompetition={(competition) => setSelectedCompetitionId(competition.id)}
           />
         )}
       </main>

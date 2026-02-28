@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 import {
   ALL_COMPETITION_CATEGORIES,
   ALL_COMPETITION_STATUSES,
   ALL_COMPETITION_VISIBILITY,
   ALL_ENROLLMENT_TYPES,
+  Division,
   NewCompetitionForm,
 } from '../types/competition';
 
@@ -31,11 +32,23 @@ const EMPTY_FORM: NewCompetitionForm = {
   startDate: '',
   endDate: '',
   description: '',
+  divisions: [
+    {
+      name: 'Division 1',
+      enrollmentOpen: false,
+      maxAthletes: 1,
+      enrolledAthletes: 0,
+      fee: 0,
+      teamSize: 1,
+      index: 1,
+    },
+  ],
 };
 
 export default function AddCompetitionModal({ onClose, onAdd }: AddCompetitionModalProps) {
   const [form, setForm] = useState<NewCompetitionForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof NewCompetitionForm, string>>>({});
+  type TextFieldKey = Exclude<keyof NewCompetitionForm, 'enrollmentOpen' | 'divisions'>;
 
   // Close on Escape
   useEffect(() => {
@@ -70,6 +83,32 @@ export default function AddCompetitionModal({ onClose, onAdd }: AddCompetitionMo
     ) {
       errs.enrollmentPeriodEnd = 'Enrollment end must be after enrollment start.';
     }
+    const divisionsAreValid = form.divisions.every((division) => {
+      const hasName = division.name.trim().length > 0;
+      const hasValidMaxAthletes = Number.isInteger(division.maxAthletes) && division.maxAthletes >= 0;
+      const hasValidEnrolledAthletes =
+        Number.isInteger(division.enrolledAthletes) && division.enrolledAthletes >= 0;
+      const hasValidFee = Number.isInteger(division.fee) && division.fee >= 0;
+      const hasValidTeamSize = Number.isInteger(division.teamSize) && division.teamSize >= 1;
+      const hasValidIndex = Number.isInteger(division.index) && division.index >= 1;
+      const enrollmentWithinCapacity = division.enrolledAthletes <= division.maxAthletes;
+
+      return (
+        hasName &&
+        hasValidMaxAthletes &&
+        hasValidEnrolledAthletes &&
+        hasValidFee &&
+        hasValidTeamSize &&
+        hasValidIndex &&
+        enrollmentWithinCapacity
+      );
+    });
+
+    if (!divisionsAreValid) {
+      errs.divisions =
+        'Each division must have a name, valid integers, and enrolled athletes cannot exceed maximum athletes.';
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -82,14 +121,53 @@ export default function AddCompetitionModal({ onClose, onAdd }: AddCompetitionMo
     }
   }
 
-  function field(key: keyof NewCompetitionForm, value: string) {
+  function field(key: TextFieldKey, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
-  function toggleField(key: keyof NewCompetitionForm, value: boolean) {
+  function toggleField(key: 'enrollmentOpen', value: boolean) {
     setForm((prev) => ({ ...prev, [key]: value }));
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
+  }
+
+  function updateDivision(index: number, updates: Partial<Division>) {
+    setForm((prev) => ({
+      ...prev,
+      divisions: prev.divisions.map((division, divisionIndex) =>
+        divisionIndex === index ? { ...division, ...updates } : division,
+      ),
+    }));
+    if (errors.divisions) setErrors((prev) => ({ ...prev, divisions: undefined }));
+  }
+
+  function addDivision() {
+    setForm((prev) => ({
+      ...prev,
+      divisions: [
+        ...prev.divisions,
+        {
+          name: `Division ${prev.divisions.length + 1}`,
+          enrollmentOpen: false,
+          maxAthletes: 1,
+          enrolledAthletes: 0,
+          fee: 0,
+          teamSize: 1,
+          index: prev.divisions.length + 1,
+        },
+      ],
+    }));
+    if (errors.divisions) setErrors((prev) => ({ ...prev, divisions: undefined }));
+  }
+
+  function removeDivision(index: number) {
+    setForm((prev) => ({
+      ...prev,
+      divisions: prev.divisions
+        .filter((_, divisionIndex) => divisionIndex !== index)
+        .map((division, divisionIndex) => ({ ...division, index: divisionIndex + 1 })),
+    }));
+    if (errors.divisions) setErrors((prev) => ({ ...prev, divisions: undefined }));
   }
 
   return (
@@ -348,6 +426,142 @@ export default function AddCompetitionModal({ onClose, onAdd }: AddCompetitionMo
               placeholder="Short competition details"
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">Divisions</label>
+              <button
+                type="button"
+                onClick={addDivision}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Division
+              </button>
+            </div>
+
+            {form.divisions.map((division, divisionIndex) => (
+              <div key={`${division.index}-${divisionIndex}`} className="rounded-lg border border-gray-200 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Division {divisionIndex + 1}
+                  </p>
+                  {form.divisions.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeDivision(divisionIndex)}
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                      title="Remove division"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                    <input
+                      type="text"
+                      value={division.name}
+                      onChange={(e) => updateDivision(divisionIndex, { name: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Index</label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={division.index}
+                      onChange={(e) =>
+                        updateDivision(divisionIndex, {
+                          index: Math.max(1, Math.trunc(Number(e.target.value) || 1)),
+                        })
+                      }
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Enrollment Open</label>
+                    <select
+                      value={division.enrollmentOpen ? 'true' : 'false'}
+                      onChange={(e) =>
+                        updateDivision(divisionIndex, { enrollmentOpen: e.target.value === 'true' })
+                      }
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                    >
+                      <option value="false">No</option>
+                      <option value="true">Yes</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Max Athletes</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={division.maxAthletes}
+                      onChange={(e) =>
+                        updateDivision(divisionIndex, {
+                          maxAthletes: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                        })
+                      }
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Enrolled Athletes</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={division.enrolledAthletes}
+                      onChange={(e) =>
+                        updateDivision(divisionIndex, {
+                          enrolledAthletes: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                        })
+                      }
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Fee</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={division.fee}
+                      onChange={(e) =>
+                        updateDivision(divisionIndex, {
+                          fee: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                        })
+                      }
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Team Size</label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={division.teamSize}
+                      onChange={(e) =>
+                        updateDivision(divisionIndex, {
+                          teamSize: Math.max(1, Math.trunc(Number(e.target.value) || 1)),
+                        })
+                      }
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {errors.divisions && <p className="text-xs text-rose-500">{errors.divisions}</p>}
           </div>
 
           {/* Actions */}

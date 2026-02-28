@@ -3,6 +3,16 @@ export type EnrollmentType = 'paid' | 'free';
 export type CompetitionStatus = 'pending' | 'completed' | 'active';
 export type CompetitionVisibility = 'Public' | 'Private';
 
+export interface Division {
+  name: string;
+  enrollmentOpen: boolean;
+  maxAthletes: number;
+  enrolledAthletes: number;
+  fee: number;
+  teamSize: number;
+  index: number;
+}
+
 export interface Competition {
   id: string;
   name: string;
@@ -22,6 +32,7 @@ export interface Competition {
   startDate?: string;
   endDate?: string;
   vat?: number;
+  divisions: Division[];
 }
 
 export interface NewCompetitionForm {
@@ -42,6 +53,7 @@ export interface NewCompetitionForm {
   startDate: string;
   endDate: string;
   description: string;
+  divisions: Division[];
 }
 
 export interface CompetitionStats {
