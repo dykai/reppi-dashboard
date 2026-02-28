@@ -1,5 +1,6 @@
 import { ArrowLeft, Package } from 'lucide-react';
 import { Competition } from '../types/competition';
+import { formatDateToDotted } from '../utils/date';
 
 interface CompetitionViewProps {
   competition: Competition;
@@ -15,10 +16,27 @@ export default function CompetitionView({ competition, onBack }: CompetitionView
   const properties = [
     { label: 'Competition ID', value: competition.id },
     { label: 'SKU', value: competition.sku },
+    { label: 'Enrollment Type', value: competition.enrollmentType },
+    { label: 'Organizer', value: competition.organizer },
+    { label: 'Sport', value: competition.sport },
+    { label: 'Team Size', value: competition.teamSize.toString() },
+    { label: 'Status', value: competition.status },
+    { label: 'Enrollment Open', value: competition.enrollmentOpen ? 'Yes' : 'No' },
+    { label: 'Visibility', value: competition.visibility },
+    ...(competition.enrollmentPeriodStart
+      ? [{ label: 'Enrollment Period Start', value: formatDateToDotted(competition.enrollmentPeriodStart) }]
+      : []),
+    ...(competition.enrollmentPeriodEnd
+      ? [{ label: 'Enrollment Period End', value: formatDateToDotted(competition.enrollmentPeriodEnd) }]
+      : []),
     { label: 'Entry Fee', value: `$${competition.price.toFixed(2)}` },
     ...(competition.vat !== undefined ? [{ label: 'VAT', value: `${competition.vat}%` }] : []),
-    ...(competition.startDate ? [{ label: 'Start Date', value: competition.startDate }] : []),
-    ...(competition.endDate ? [{ label: 'End Date', value: competition.endDate }] : []),
+    ...(competition.startDate
+      ? [{ label: 'Start Date', value: formatDateToDotted(competition.startDate) }]
+      : []),
+    ...(competition.endDate
+      ? [{ label: 'End Date', value: formatDateToDotted(competition.endDate) }]
+      : []),
   ];
 
   return (

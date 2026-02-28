@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
+  ALL_COMPETITION_STATUSES,
+  ALL_COMPETITION_VISIBILITY,
+  ALL_ENROLLMENT_TYPES,
   Competition,
   CompetitionCategory,
   CompetitionStats,
@@ -17,12 +20,33 @@ function isCompetitionCategory(category: string): category is CompetitionCategor
   return COMPETITION_CATEGORIES.includes(category as CompetitionCategory);
 }
 
+function normalizeCompetition(item: Competition): Competition {
+  const teamSizeValue = Number(item.teamSize);
+
+  return {
+    ...item,
+    enrollmentType: ALL_ENROLLMENT_TYPES.includes(item.enrollmentType)
+      ? item.enrollmentType
+      : 'paid',
+    organizer: item.organizer?.trim() ?? '',
+    sport: item.sport?.trim() ?? '',
+    teamSize: Number.isInteger(teamSizeValue) && teamSizeValue > 0 ? teamSizeValue : 1,
+    status: ALL_COMPETITION_STATUSES.includes(item.status) ? item.status : 'pending',
+    enrollmentOpen: Boolean(item.enrollmentOpen),
+    enrollmentPeriodStart: item.enrollmentPeriodStart || undefined,
+    enrollmentPeriodEnd: item.enrollmentPeriodEnd || undefined,
+    visibility: ALL_COMPETITION_VISIBILITY.includes(item.visibility) ? item.visibility : 'Public',
+  };
+}
+
 function cloneInitialCompetitions(): Competition[] {
   return INITIAL_COMPETITIONS.map((competition) => ({ ...competition }));
 }
 
 function sanitizeCompetitions(items: Competition[]): Competition[] {
-  return items.filter((item) => isCompetitionCategory(item.category));
+  return items
+    .filter((item) => isCompetitionCategory(item.category))
+    .map((item) => normalizeCompetition(item));
 }
 
 function resetStorageToInitial(): Competition[] {
@@ -89,6 +113,15 @@ export function useCompetitions() {
         category: form.category,
         price: parseFloat(form.price),
         vat: form.vat ? parseFloat(form.vat) : undefined,
+        enrollmentType: form.enrollmentType,
+        organizer: form.organizer.trim(),
+        sport: form.sport.trim(),
+        teamSize: Math.max(1, parseInt(form.teamSize, 10) || 1),
+        status: form.status,
+        enrollmentOpen: form.enrollmentOpen,
+        enrollmentPeriodStart: form.enrollmentPeriodStart || undefined,
+        enrollmentPeriodEnd: form.enrollmentPeriodEnd || undefined,
+        visibility: form.visibility,
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
         description: form.description.trim() || undefined,

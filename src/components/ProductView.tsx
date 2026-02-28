@@ -1,5 +1,6 @@
 import { ArrowLeft, Package } from 'lucide-react';
 import { Competition } from '../types/inventory';
+import { formatDateToDotted } from '../utils/date';
 
 interface ProductViewProps {
   competition: Competition;
@@ -17,8 +18,12 @@ export default function ProductView({ competition, onBack }: ProductViewProps) {
     { label: 'SKU', value: competition.sku },
     { label: 'Entry Fee', value: `$${competition.price.toFixed(2)}` },
     ...(competition.vat !== undefined ? [{ label: 'VAT', value: `${competition.vat}%` }] : []),
-    ...(competition.startDate ? [{ label: 'Start Date', value: competition.startDate }] : []),
-    ...(competition.endDate ? [{ label: 'End Date', value: competition.endDate }] : []),
+    ...(competition.startDate
+      ? [{ label: 'Start Date', value: formatDateToDotted(competition.startDate) }]
+      : []),
+    ...(competition.endDate
+      ? [{ label: 'End Date', value: formatDateToDotted(competition.endDate) }]
+      : []),
   ];
 
   return (

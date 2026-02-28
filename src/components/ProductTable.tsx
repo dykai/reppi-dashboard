@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Trash2, ChevronDown, Eye } from 'lucide-react';
 import { ALL_COMPETITION_CATEGORIES, Competition } from '../types/inventory';
+import { formatDateToDotted } from '../utils/date';
 
 interface ProductTableProps {
   competitions: Competition[];
@@ -199,10 +200,14 @@ export default function ProductTable({
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">{competition.startDate ?? '—'}</span>
+                        <span className="text-sm text-gray-600">
+                          {competition.startDate ? formatDateToDotted(competition.startDate) : '—'}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">{competition.endDate ?? '—'}</span>
+                        <span className="text-sm text-gray-600">
+                          {competition.endDate ? formatDateToDotted(competition.endDate) : '—'}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">

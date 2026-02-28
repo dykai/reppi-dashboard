@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Trash2, ChevronDown, Eye } from 'lucide-react';
 import { ALL_COMPETITION_CATEGORIES, Competition } from '../types/competition';
+import { formatDateToDotted } from '../utils/date';
 
 interface CompetitionTableProps {
   competitions: Competition[];
@@ -151,7 +152,19 @@ export default function CompetitionTable({
           <table className="min-w-full divide-y divide-gray-100">
             <thead>
               <tr className="bg-gray-50">
-                {['Competition', 'SKU', 'Category', 'Entry Fee', 'Start Date', 'End Date', ''].map((h) => (
+                {[
+                  'Competition',
+                  'SKU',
+                  'Category',
+                  'Entry Fee',
+                  'Team Size',
+                  'Status',
+                  'Enrollment Open',
+                  'Visibility',
+                  'Start Date',
+                  'End Date',
+                  '',
+                ].map((h) => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
@@ -164,7 +177,7 @@ export default function CompetitionTable({
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-gray-400 text-sm">
+                  <td colSpan={11} className="py-16 text-center text-gray-400 text-sm">
                     No competitions found.
                   </td>
                 </tr>
@@ -199,10 +212,28 @@ export default function CompetitionTable({
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">{competition.startDate ?? '—'}</span>
+                        <span className="text-sm text-gray-600">{competition.teamSize}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">{competition.endDate ?? '—'}</span>
+                        <span className="text-sm text-gray-600 capitalize">{competition.status}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-600">
+                          {competition.enrollmentOpen ? 'Yes' : 'No'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-600">{competition.visibility}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-600">
+                          {competition.startDate ? formatDateToDotted(competition.startDate) : '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-600">
+                          {competition.endDate ? formatDateToDotted(competition.endDate) : '—'}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
