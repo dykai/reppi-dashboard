@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Package, Plus, Save, Trash2 } from 'lucide-react';
 import { Competition, Division } from '../types/competition';
+import { Athlete, User } from '../types/user';
 import { formatDateToDotted } from '../utils/date';
+import CompetitionUsersPanel from './CompetitionUsersPanel';
 
 interface CompetitionViewProps {
   competition: Competition;
+  users: User[];
+  athletes: Athlete[];
   onBack: () => void;
   onUpdateDivisions: (competitionId: string, divisions: Division[]) => void;
 }
@@ -16,6 +20,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function CompetitionView({
   competition,
+  users,
+  athletes,
   onBack,
   onUpdateDivisions,
 }: CompetitionViewProps) {
@@ -147,6 +153,16 @@ export default function CompetitionView({
       : []),
   ];
 
+  const usersById = useMemo(
+    () => new Map(users.map((user) => [user.id, user])),
+    [users],
+  );
+
+  const competitionAthletes = useMemo(
+    () => athletes.filter((athlete) => athlete.competitionId === competition.id),
+    [athletes, competition.id],
+  );
+
   return (
     <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-200">
       {/* Header */}
@@ -231,6 +247,8 @@ export default function CompetitionView({
           </div>
         )}
 
+        <CompetitionUsersPanel competition={competition} users={users} athletes={athletes} />
+
         <div className="bg-gray-50 rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Divisions</p>
@@ -263,21 +281,26 @@ export default function CompetitionView({
           {editableDivisions.length === 0 ? (
             <p className="text-sm text-gray-500">No divisions configured.</p>
           ) : (
-            editableDivisions.map((division, divisionIndex) => (
-              <div key={`${division.index}-${divisionIndex}`} className="rounded-lg border border-gray-200 p-3 space-y-3 bg-white">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Division {divisionIndex + 1}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => removeDivision(divisionIndex)}
-                    className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
-                    title="Remove division"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+            editableDivisions.map((division, divisionIndex) => {
+              const divisionAthletes = competitionAthletes.filter(
+                (athlete) => athlete.divisionIndex === division.index,
+              );
+
+              return (
+                <div key={`${division.index}-${divisionIndex}`} className="rounded-lg border border-gray-200 p-3 space-y-3 bg-white">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Division {divisionIndex + 1}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => removeDivision(divisionIndex)}
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                      title="Remove division"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div className="sm:col-span-2 lg:col-span-3">
@@ -378,8 +401,41 @@ export default function CompetitionView({
                     />
                   </div>
                 </div>
-              </div>
-            ))
+
+                  <div className="rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Users in Division
+                      </p>
+                      <span className="text-xs text-gray-500">{divisionAthletes.length} user(s)</span>
+                    </div>
+
+                    {divisionAthletes.length === 0 ? (
+                      <p className="text-sm text-gray-500">No users in this division.</p>
+                    ) : (
+                      <ul className="space-y-1">
+                        {divisionAthletes.map((athlete) => {
+                          const user = usersById.get(athlete.userId);
+                          const userDisplay = user
+                            ? `${user.firstName} ${user.lastName}`
+                            : athlete.name;
+
+                          return (
+                            <li
+                              key={athlete.id}
+                              className="text-sm text-gray-700 flex items-center justify-between gap-2"
+                            >
+                              <span>{userDisplay}</span>
+                              <span className="text-xs text-gray-500">{athlete.boxName}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              );
+            })
           )}
 
           {divisionError && <p className="text-xs text-rose-500">{divisionError}</p>}

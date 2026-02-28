@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCompetitions } from './hooks/useCompetitions';
+import { useUsers } from './hooks/useUsers';
 import Header from './components/Header';
 import StatsCards from './components/StatsCards';
 import CompetitionTable from './components/CompetitionTable';
@@ -16,6 +17,7 @@ export default function App() {
     deleteCompetition,
     updateCompetitionDivisions,
   } = useCompetitions();
+  const { users, athletes } = useUsers();
   const [showModal, setShowModal] = useState(false);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
   const selectedCompetition =
@@ -32,6 +34,8 @@ export default function App() {
         {selectedCompetition ? (
           <CompetitionView
             competition={selectedCompetition}
+            users={users}
+            athletes={athletes}
             onBack={() => setSelectedCompetitionId(null)}
             onUpdateDivisions={updateCompetitionDivisions}
           />
