@@ -10,6 +10,7 @@ interface CompetitionViewProps {
   users: User[];
   athletes: Athlete[];
   section: 'competition' | 'divisions' | 'athletes';
+  onSelectSection: (section: 'competition' | 'divisions' | 'athletes') => void;
   onAddAthlete: (input: {
     userId: string;
     competitionId: string;
@@ -30,6 +31,7 @@ export default function CompetitionView({
   users,
   athletes,
   section,
+  onSelectSection,
   onAddAthlete,
   onBack,
   onUpdateDivisions,
@@ -293,13 +295,24 @@ export default function CompetitionView({
   return (
     <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-200">
       <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
+        {section === 'competition' ? (
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Competitions
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSelectSection('competition')}
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {competition.name}
+          </button>
+        )}
         <span className="text-gray-300">|</span>
         <h2 className="text-sm font-semibold text-gray-700">{sectionTitle}</h2>
       </div>

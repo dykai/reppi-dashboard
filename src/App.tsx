@@ -89,20 +89,6 @@ export default function App() {
   function renderCompetitions() {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Competitions</h2>
-            <p className="text-sm text-gray-500">Manage all competition records and divisions.</p>
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-[#d26512] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-orange-700 active:scale-95 transition-all duration-150"
-          >
-            <span className="text-lg leading-none">+</span>
-            Add Competition
-          </button>
-        </div>
-
         {selectedCompetition ? (
           <CompetitionView
             competition={selectedCompetition}
@@ -110,6 +96,7 @@ export default function App() {
             athletes={athletes}
             onAddAthlete={addAthlete}
             section={activeCompetitionSection}
+            onSelectSection={setActiveCompetitionSection}
             onBack={() => {
               setSelectedCompetitionId(null);
               setActiveCompetitionSection('competition');
@@ -118,6 +105,19 @@ export default function App() {
           />
         ) : (
           <>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Competitions</h2>
+                <p className="text-sm text-gray-500">Manage all competition records and divisions.</p>
+              </div>
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 bg-[#d26512] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow hover:bg-orange-700 active:scale-95 transition-all duration-150"
+              >
+                <span className="text-lg leading-none">+</span>
+                Add Competition
+              </button>
+            </div>
             <StatsCards stats={stats} />
             <CompetitionTable
               competitions={competitions}
