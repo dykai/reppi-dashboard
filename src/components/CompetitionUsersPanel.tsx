@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Competition } from '../types/competition';
 import { Athlete, User } from '../types/user';
-import { formatDateToDotted } from '../utils/date';
 
 interface CompetitionUsersPanelProps {
   competition: Competition;
@@ -40,8 +39,6 @@ export default function CompetitionUsersPanel({
     return fullName.includes(normalizedSearch) || user.email.toLowerCase().includes(normalizedSearch);
   }
 
-  const filteredSystemUsers = users.filter(matchesUserSearch);
-
   const competitionUserIds = Array.from(new Set(divisionFilteredAthletes.map((athlete) => athlete.userId)));
   const competitionUsers = competitionUserIds
     .map((userId) => usersById.get(userId))
@@ -57,7 +54,7 @@ export default function CompetitionUsersPanel({
 
   return (
     <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Users</p>
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Athletes</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
@@ -101,40 +98,10 @@ export default function CompetitionUsersPanel({
 
       <section className="space-y-2">
         <h4 className="text-sm font-semibold text-gray-900">
-          All Users in System ({filteredSystemUsers.length})
-        </h4>
-        {filteredSystemUsers.length === 0 ? (
-          <p className="text-sm text-gray-500">No users found.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-            <table className="min-w-full divide-y divide-gray-100">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Registered</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredSystemUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-3 py-2 text-sm text-gray-800">{`${user.firstName} ${user.lastName}`}</td>
-                    <td className="px-3 py-2 text-sm text-gray-600">{user.email}</td>
-                    <td className="px-3 py-2 text-sm text-gray-600">{formatDateToDotted(user.registeredDate.toISOString())}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-2">
-        <h4 className="text-sm font-semibold text-gray-900">
-          All Users in Competition ({competitionUsers.length})
+          Athletes in Competition ({competitionUsers.length})
         </h4>
         {competitionUsers.length === 0 ? (
-          <p className="text-sm text-gray-500">No users enrolled in this competition.</p>
+          <p className="text-sm text-gray-500">No athletes enrolled in this competition.</p>
         ) : (
           <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
             {competitionUsers.map((user) => (
@@ -144,7 +111,7 @@ export default function CompetitionUsersPanel({
                   <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
                 <span className="text-xs text-gray-500">
-                  {divisionFilteredAthletes.filter((athlete) => athlete.userId === user.id).length} athlete(s)
+                  {divisionFilteredAthletes.filter((athlete) => athlete.userId === user.id).length} athlete entry(s)
                 </span>
               </div>
             ))}

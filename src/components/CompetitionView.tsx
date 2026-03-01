@@ -4,6 +4,7 @@ import { Competition, Division } from '../types/competition';
 import { Athlete, User } from '../types/user';
 import { formatDateToDotted } from '../utils/date';
 import CompetitionUsersPanel from './CompetitionUsersPanel';
+import AddAthleteModal from './AddAthleteModal';
 
 interface CompetitionViewProps {
   competition: Competition;
@@ -12,7 +13,8 @@ interface CompetitionViewProps {
   section: 'competition' | 'divisions' | 'athletes';
   onSelectSection: (section: 'competition' | 'divisions' | 'athletes') => void;
   onAddAthlete: (input: {
-    userId: string;
+    userEmail: string;
+    userName: string;
     competitionId: string;
     divisionIndex: number;
     boxName: string;
@@ -39,10 +41,7 @@ export default function CompetitionView({
   const [editableDivisions, setEditableDivisions] = useState<Division[]>(competition.divisions);
   const [divisionError, setDivisionError] = useState<string | null>(null);
   const [showBackWarning, setShowBackWarning] = useState(false);
-  const [athleteFormByDivision, setAthleteFormByDivision] = useState<
-    Record<number, { userId: string; boxName: string }>
-  >({});
-  const [athleteErrorByDivision, setAthleteErrorByDivision] = useState<Record<number, string>>({});
+  const [showAddAthleteModal, setShowAddAthleteModal] = useState(false);
 
   useEffect(() => {
     setEditableDivisions(
@@ -52,8 +51,7 @@ export default function CompetitionView({
     );
     setDivisionError(null);
     setShowBackWarning(false);
-    setAthleteFormByDivision({});
-    setAthleteErrorByDivision({});
+    setShowAddAthleteModal(false);
   }, [competition]);
 
   const hasDivisionChanges = useMemo(
@@ -180,86 +178,31 @@ export default function CompetitionView({
     [athletes, competition.id],
   );
 
-  const sortedUsers = useMemo(
-    () =>
-      [...users].sort((firstUser, secondUser) => {
-        const firstFullName = `${firstUser.firstName} ${firstUser.lastName}`.toLowerCase();
-        const secondFullName = `${secondUser.firstName} ${secondUser.lastName}`.toLowerCase();
-        return firstFullName.localeCompare(secondFullName);
-      }),
-    [users],
-  );
-
-  function getAthleteForm(divisionIndex: number): { userId: string; boxName: string } {
-    return athleteFormByDivision[divisionIndex] ?? { userId: '', boxName: '' };
-  }
-
-  function updateAthleteForm(divisionIndex: number, updates: Partial<{ userId: string; boxName: string }>) {
-    setAthleteFormByDivision((previous) => ({
-      ...previous,
-      [divisionIndex]: {
-        ...getAthleteForm(divisionIndex),
-        ...updates,
-      },
-    }));
-
-    if (athleteErrorByDivision[divisionIndex]) {
-      setAthleteErrorByDivision((previous) => {
-        const next = { ...previous };
-        delete next[divisionIndex];
-        return next;
-      });
-    }
-  }
-
-  function addAthleteToDivision(division: Division) {
-    const form = getAthleteForm(division.index);
-
+  function addAthleteFromModal(input: {
+    userEmail: string;
+    userName: string;
+    divisionIndex: number;
+    boxName: string;
+  }): boolean {
     if (hasDivisionChanges) {
-      setAthleteErrorByDivision((previous) => ({
-        ...previous,
-        [division.index]: 'Save division changes before adding athletes.',
-      }));
-      return;
+      return false;
     }
 
-    if (!form.userId) {
-      setAthleteErrorByDivision((previous) => ({
-        ...previous,
-        [division.index]: 'Select a user before adding as athlete.',
-      }));
-      return;
-    }
-
-    if (!form.boxName.trim()) {
-      setAthleteErrorByDivision((previous) => ({
-        ...previous,
-        [division.index]: 'Enter a box name before adding as athlete.',
-      }));
-      return;
-    }
-
-    if (division.enrolledAthletes >= division.maxAthletes) {
-      setAthleteErrorByDivision((previous) => ({
-        ...previous,
-        [division.index]: 'Division is at full capacity.',
-      }));
-      return;
+    const division = editableDivisions.find((entry) => entry.index === input.divisionIndex);
+    if (!division || division.enrolledAthletes >= division.maxAthletes) {
+      return false;
     }
 
     const added = onAddAthlete({
-      userId: form.userId,
+      userEmail: input.userEmail,
+      userName: input.userName,
       competitionId: competition.id,
       divisionIndex: division.index,
-      boxName: form.boxName,
+      boxName: input.boxName,
     });
 
     if (!added) {
-      setAthleteErrorByDivision((previous) => ({
-        ...previous,
-        [division.index]: 'Unable to add athlete. Check selected user and box name.',
-      }));
-      return;
+      return false;
     }
 
     const nextDivisions = editableDivisions.map((entry) =>
@@ -274,15 +217,7 @@ export default function CompetitionView({
       [...nextDivisions].sort((firstDivision, secondDivision) => firstDivision.index - secondDivision.index),
     );
 
-    setAthleteFormByDivision((previous) => ({
-      ...previous,
-      [division.index]: { userId: '', boxName: '' },
-    }));
-    setAthleteErrorByDivision((previous) => {
-      const next = { ...previous };
-      delete next[division.index];
-      return next;
-    });
+    return true;
   }
 
   const sectionTitle =
@@ -423,6 +358,17 @@ export default function CompetitionView({
                   </button>
                 </div>
               )}
+              {section === 'athletes' && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddAthleteModal(true)}
+                  disabled={hasDivisionChanges || editableDivisions.length === 0}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Athlete
+                </button>
+              )}
             </div>
 
             {section === 'athletes' && hasDivisionChanges && (
@@ -438,7 +384,6 @@ export default function CompetitionView({
                 const divisionAthletes = competitionAthletes.filter(
                   (athlete) => athlete.divisionIndex === division.index,
                 );
-                const divisionForm = getAthleteForm(division.index);
 
                 return (
                   <div key={`${division.index}-${divisionIndex}`} className="rounded-lg border border-gray-200 p-3 space-y-3 bg-white">
@@ -569,69 +514,16 @@ export default function CompetitionView({
 
                     {section === 'athletes' && (
                       <>
-                        <div className="rounded-md border border-gray-200 bg-indigo-50/40 p-3 space-y-2">
-                          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Add Athlete to Division
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <div className="sm:col-span-1">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">User</label>
-                              <select
-                                value={divisionForm.userId}
-                                onChange={(event) =>
-                                  updateAthleteForm(division.index, { userId: event.target.value })
-                                }
-                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-                              >
-                                <option value="">Select user</option>
-                                {sortedUsers.map((user) => (
-                                  <option key={user.id} value={user.id}>
-                                    {`${user.firstName} ${user.lastName}`}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            <div className="sm:col-span-1">
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Box Name</label>
-                              <input
-                                type="text"
-                                value={divisionForm.boxName}
-                                onChange={(event) =>
-                                  updateAthleteForm(division.index, { boxName: event.target.value })
-                                }
-                                placeholder="Enter box name"
-                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                              />
-                            </div>
-
-                            <div className="sm:col-span-1 flex items-end">
-                              <button
-                                type="button"
-                                onClick={() => addAthleteToDivision(division)}
-                                className="w-full inline-flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-                              >
-                                <Plus className="h-3.5 w-3.5" />
-                                Add Athlete
-                              </button>
-                            </div>
-                          </div>
-
-                          {athleteErrorByDivision[division.index] && (
-                            <p className="text-xs text-rose-500">{athleteErrorByDivision[division.index]}</p>
-                          )}
-                        </div>
-
                         <div className="rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">
                           <div className="flex items-center justify-between">
                             <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                              Users in Division
+                              Athletes in Division
                             </p>
-                            <span className="text-xs text-gray-500">{divisionAthletes.length} user(s)</span>
+                            <span className="text-xs text-gray-500">{divisionAthletes.length} athlete(s)</span>
                           </div>
 
                           {divisionAthletes.length === 0 ? (
-                            <p className="text-sm text-gray-500">No users in this division.</p>
+                            <p className="text-sm text-gray-500">No athletes in this division.</p>
                           ) : (
                             <ul className="space-y-1">
                               {divisionAthletes.map((athlete) => {
@@ -664,6 +556,14 @@ export default function CompetitionView({
           </div>
         )}
       </div>
+
+      {section === 'athletes' && showAddAthleteModal && (
+        <AddAthleteModal
+          divisions={editableDivisions}
+          onClose={() => setShowAddAthleteModal(false)}
+          onAdd={addAthleteFromModal}
+        />
+      )}
     </div>
   );
 }
